@@ -187,7 +187,7 @@ def run_kohya_gui():
     cmd = (
         f"cd {KOHYA_BASE} && "
         f"accelerate launch --num_cpu_threads_per_process=4 kohya_gui.py "
-        f"--listen 0.0.0.0 --server_port {PORT} --headless --noverify"
+        f"--listen 0.0.0.0 --server_port {PORT} --share=True --headless --noverify"
     )
     
     print(f"starting kohya with: {cmd}")
