@@ -210,7 +210,7 @@ def download_hf_dataset(repo_id: str, allow_patterns: str = "*", repo_type: str 
 
 #FLux download
 
-@app.function(secrets=[modal.Secret.from_name("huggingface-token")], volumes={MODELS_PATH: models_vol})
+@app.function(secrets=[modal.Secret.from_name("huggingface-secret")], volumes={MODELS_PATH: models_vol})
 def download_flux_model(repo_id: str = "black-forest-labs/FLUX.1-dev", subfolder: str = None):
     from huggingface_hub import snapshot_download
 
