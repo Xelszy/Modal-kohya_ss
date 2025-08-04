@@ -118,14 +118,14 @@ try:
     modal_settings = config.get('modal_settings', {})
     kohya_settings = config.get('kohya_settings', {})
     ALLOW_CONCURRENT_INPUTS = modal_settings.get('allow_concurrent_inputs', 10)
-    CONTAINER_IDLE_TIMEOUT = modal_settings.get('container_idle_timeout', 600)
+    scaledown_window = modal_settings.get('scaledown_window', 600)
     TIMEOUT = modal_settings.get('timeout', 3600)
     GPU_CONFIG = modal_settings.get('gpu', "A10G")
     PORT = kohya_settings.get('port', 8000)
     
 except Exception as e:
     ALLOW_CONCURRENT_INPUTS = 5
-    CONTAINER_IDLE_TIMEOUT = 300
+    scaledown_window = 300 #depreciations fix
     TIMEOUT = 1800
     GPU_CONFIG = "A10G"
     PORT = 8000
@@ -150,7 +150,7 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
 @app.function(
     gpu=GPU_CONFIG,
     timeout=TIMEOUT,
-    container_idle_timeout=CONTAINER_IDLE_TIMEOUT,
+    scaledown_window=scaledown_window,
     volumes={
         CACHE_PATH: cache_vol,
         MODELS_PATH: models_vol,
@@ -164,6 +164,42 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
 )
 @modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
 @modal.web_server(PORT, startup_timeout=300)
+
+#dataset downlaod
+
+@app.function(volumes={DATASET_PATH: dataset_vol})
+def download_hf_dataset(repo_id: str, allow_patterns: str = "*", repo_type: str = "dataset"):
+    from huggingface_hub import snapshot_download
+
+    local_dir = snapshot_download(
+        repo_id=repo_id,
+        repo_type=repo_type,
+        local_dir=DATASET_PATH,
+        local_dir_use_symlinks=False,
+        allow_patterns=allow_patterns
+    )
+    return {"status": "ok", "path": local_dir}
+
+
+#FLux download
+
+@app.function(secrets=[modal.Secret.from_name("huggingface-token")], volumes={MODELS_PATH: models_vol})
+def download_flux_model(repo_id: str = "black-forest-labs/FLUX.1-dev", subfolder: str = None):
+    from huggingface_hub import snapshot_download
+
+    local_dir = snapshot_download(
+        repo_id=repo_id,
+        repo_type="model",
+        local_dir=MODELS_PATH,
+        local_dir_use_symlinks=False,
+        allow_patterns="*"
+    )
+    return {"status": "ok", "path": local_dir}
+
+
+################################################################
+
+
 def run_kohya_gui():
     import torch
     import os
