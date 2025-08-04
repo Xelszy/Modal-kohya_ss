@@ -72,7 +72,7 @@ kohya_image = (
 
       #conflict solution
       
-        "sed -i -e '/torch/d' -e '/torchvision/d' -e '/torchaudio/d' -e '/xformers/d' -e '/bitsandbytes/d' requirements.txt",
+        "[ -f requirements.txt ] && sed -i -e '/torch/d' -e '/torchvision/d' -e '/torchaudio/d' -e '/xformers/d' -e '/bitsandbytes/d' requirements.txt",
         "pip install --use-pep517 --timeout 600 --find-links /tmp/pip-cache -r requirements.txt",
         "pip uninstall -y torch torchvision torchaudio triton xformers bitsandbytes || true",
 
