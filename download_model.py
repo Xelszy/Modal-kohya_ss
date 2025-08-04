@@ -1,13 +1,20 @@
 #GPT
 
 import modal
-from huggingface_hub import hf_hub_download, list_repo_files, snapshot_download
+from huggingface_hub import hf_hub_download, list_repo_files
 from tqdm import tqdm
 
+# Path volume untuk model
 MODELS_PATH = "/kohya_ss/models"
 models_vol = modal.Volume.from_name("kohya-models", create_if_missing=True)
 
-app = modal.App(name="download-hf-model")
+# Bikin image ringan khusus downloader
+image = (
+    modal.Image.debian_slim()
+    .pip_install("huggingface_hub>=0.23.0", "tqdm")
+)
+
+app = modal.App(name="download-hf-model", image=image)
 
 @app.function(
     timeout=3600,
@@ -18,39 +25,35 @@ app = modal.App(name="download-hf-model")
 )
 def download_model(
     repo_id: str,
-    files=None,            # string / list / None
-    auto_ext=None          # filter ekstensi kalau files=None
+    files=None,            # bisa string atau list
+    auto_ext=None          # filter ekstensi (contoh: ["safetensors", "bin", "pt"])
 ):
     """
-    Robust downloader for Hugging Face models.
+    Unduh model Hugging Face ke volume /kohya_ss/models
     - repo_id   : nama repo huggingface, ex: black-forest-labs/FLUX.1-dev
-    - files     : nama file (str), list[str], atau None → kalau None maka snapshot_download
-    - auto_ext  : filter ekstensi, default ["safetensors", "bin", "pt"]
+    - files     : nama file (str) atau list file (list[str])
+    - auto_ext  : jika None, default ["safetensors", "bin", "pt"]
     """
 
+    results = []
     try:
-        # Case 1: user tidak kasih files → download repo dengan snapshot
+        # kalau user tidak kasih files → auto mode
         if files is None:
+            repo_files = list_repo_files(repo_id, repo_type="model")
             if auto_ext is None:
                 auto_ext = ["safetensors", "bin", "pt"]
+            files = [f for f in repo_files if f.split(".")[-1] in auto_ext]
 
-            allow_patterns = [f"*.{ext}" for ext in auto_ext]
-            local_dir = snapshot_download(
-                repo_id=repo_id,
-                repo_type="model",
-                local_dir=MODELS_PATH,
-                local_dir_use_symlinks=False,
-                allow_patterns=allow_patterns
-            )
-            return {"status": "done", "mode": "snapshot", "path": local_dir}
-
-        # Case 2: user kasih 1 file (string)
-        if isinstance(files, str):
+        elif isinstance(files, str):
             files = [files]
 
-        # Case 3: user kasih banyak file
-        results = []
-        for fname in tqdm(files, desc=f"Downloading from {repo_id}"):
+        elif isinstance(files, list):
+            pass
+        else:
+            return {"error": "files harus string atau list"}
+
+        # Download dengan progressbar
+        for fname in tqdm(files, desc=f"Downloading {repo_id}"):
             try:
                 local_path = hf_hub_download(
                     repo_id=repo_id,
@@ -62,7 +65,8 @@ def download_model(
                 results.append({"file": fname, "status": "ok", "path": local_path})
             except Exception as e:
                 results.append({"file": fname, "status": "error", "message": str(e)})
-        return {"status": "done", "mode": "per-file", "results": results}
+
+        return {"status": "done", "results": results}
 
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -70,12 +74,7 @@ def download_model(
 
 @app.local_entrypoint()
 def main():
-    # Contoh 1 → download 1 file spesifik
+    # Contoh: download Flux
     repo_id = "black-forest-labs/FLUX.1-dev"
     res = download_model.remote(repo_id, files="flux1-dev.safetensors")
-    print("Download spesifik:", res)
-
-    # Contoh 2 → download semua safetensors & bin pakai snapshot
-    repo_id = "stabilityai/stable-diffusion-xl-base-1.0"
-    res = download_model.remote(repo_id, files=None, auto_ext=["safetensors", "bin"])
-    print("Download snapshot:", res)
+    print(res)
