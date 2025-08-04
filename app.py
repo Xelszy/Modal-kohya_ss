@@ -154,7 +154,7 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
     volumes={
         CACHE_PATH: cache_vol,
         MODELS_PATH: models_vol,
-        DATASET_PATH: dataset_vol,
+        "/mnt/kohya-dataset": dataset_vol,  # mount langsung
         OUTPUTS_PATH: outputs_vol,
         CONFIGS_PATH: configs_vol,
     },
