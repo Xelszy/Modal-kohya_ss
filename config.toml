@@ -1,0 +1,21 @@
+# config untuk kohya modal deployment
+
+[modal_settings]
+gpu = "A100"  # options: A10G, A100, H100, T4
+allow_concurrent_inputs = 10
+container_idle_timeout = 600  # seconds
+timeout = 3600  # seconds
+memory = 8192  # MB
+cpu = 4
+
+[kohya_settings]
+port = 8000
+enable_bucket_manager = true
+enable_model_converter = true
+max_models = 5
+
+# optimization stuff
+[optimization]
+use_tcmalloc = true
+parallel_downloads = true
+cache_models = true
