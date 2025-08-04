@@ -3,14 +3,19 @@
 import modal
 from huggingface_hub import hf_hub_download, list_repo_files
 from tqdm import tqdm
-import os
 
 # path dan volume
 MODELS_PATH = "/kohya_ss/models"
 models_vol = modal.Volume.from_name("kohya-models", create_if_missing=True)
 
+# bikin base image dengan huggingface_hub + tqdm
+image = (
+    modal.Image.debian_slim()
+    .pip_install("huggingface_hub>=0.23.0", "tqdm")
+)
+
 # definisi app
-app = modal.App(name="download-hf-model")
+app = modal.App(name="download-hf-model", image=image)
 
 @app.function(
     timeout=3600,
@@ -32,6 +37,7 @@ def download_model(
       auto_ext (list): filter ekstensi otomatis, contoh ["safetensors","bin"]
     """
     results = []
+
     try:
         # ambil daftar file dari repo kalau files None
         if files is None:
@@ -73,7 +79,6 @@ def download_model(
         return {"status": "error", "message": str(e)}
 
 
-# contoh local entry
 @app.local_entrypoint()
 def main():
     repo_id = "black-forest-labs/FLUX.1-dev"
