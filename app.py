@@ -74,7 +74,7 @@ kohya_image = (
         
         # clone sd-scripts
         
-        "if [ ! -d /kohya_ss/sd-scripts ]; then git clone https://github.com/kohya-ss/sd-scripts.git /kohya_ss/sd-scripts; fi",
+        "git clone https://github.com/kohya-ss/sd-scripts.git /kohya_ss/sd-scripts",
 
         "[ -f requirements.txt ] && sed -i -e '/torch/d' -e '/torchvision/d' -e '/torchaudio/d' -e '/xformers/d' -e '/bitsandbytes/d' -e '/sd-scripts/d' requirements.txt",
         "pip install --use-pep517 --timeout 600 --find-links /tmp/pip-cache -r requirements.txt",
