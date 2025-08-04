@@ -1,7 +1,7 @@
 # config untuk kohya modal deployment
 
 [modal_settings]
-gpu = "A100"  # options: A10G, A100, H100, T4
+gpu = "L4"  # options: A10G, A100, H100, T4
 allow_concurrent_inputs = 10
 container_idle_timeout = 600  # seconds
 timeout = 3600  # seconds
