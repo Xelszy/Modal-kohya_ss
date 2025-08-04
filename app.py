@@ -156,13 +156,13 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
     volumes={
         CACHE_PATH: cache_vol,
         MODELS_PATH: models_vol,
-        DATASET_PATH: dataset_vol, 
+        DATASET_PATH: dataset_vol,
         OUTPUTS_PATH: outputs_vol,
         CONFIGS_PATH: configs_vol,
     },
     memory=8192,
     cpu=4,
-    max_containers=1
+    max_containers=1,
 )
 
 
@@ -200,6 +200,8 @@ def download_flux_model(repo_id: str = "black-forest-labs/FLUX.1-dev", subfolder
 
 ################################################################
 
+@modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
+@modal.web_server(PORT, startup_timeout=300)
 
 def run_kohya_gui():
     import torch
