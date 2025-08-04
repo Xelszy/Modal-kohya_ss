@@ -147,8 +147,6 @@ dataset_vol = modal.Volume.from_name("kohya-dataset", create_if_missing=True)
 outputs_vol = modal.Volume.from_name("kohya-outputs", create_if_missing=True)
 configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
 
-@modal.web_server(PORT, startup_timeout=300)
-@modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
 @app.function(
     gpu=GPU_CONFIG,
     timeout=TIMEOUT,
@@ -164,6 +162,8 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
     cpu=4,
     max_containers=1,
 )
+@modal.web_server(PORT, startup_timeout=300)
+@modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
 def run_kohya_gui():
     import torch, os, subprocess
 
