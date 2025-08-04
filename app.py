@@ -164,7 +164,33 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
     cpu=4,
     max_containers=1,
 )
+def run_kohya_gui():
+    import torch, os, subprocess
 
+    print(f"pytorch version: {torch.__version__}")
+    print(f"cuda available: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        print(f"gpu name: {torch.cuda.get_device_name(0)}")
+
+    os.environ["HF_HOME"] = CACHE_PATH
+    os.environ["TRANSFORMERS_CACHE"] = CACHE_PATH
+
+    for path in [MODELS_PATH, DATASET_PATH, OUTPUTS_PATH, CONFIGS_PATH]:
+        os.makedirs(path, exist_ok=True)
+
+    cmd = (
+        f"cd {KOHYA_BASE} && "
+        f"accelerate launch --num_cpu_threads_per_process=4 kohya_gui.py "
+        f"--listen 0.0.0.0 --server_port {PORT} --share --headless --noverify"
+    )
+    print(f"starting kohya with: {cmd}")
+
+    try:
+        process = subprocess.Popen(cmd, shell=True)
+        process.wait()
+    except Exception as e:
+        print(f"error starting kohya: {e}")
+        raise
 
 #dataset downlaod
 
@@ -197,48 +223,7 @@ def download_flux_model(repo_id: str = "black-forest-labs/FLUX.1-dev", subfolder
     )
     return {"status": "ok", "path": local_dir}
 
-
-################################################################
-
-@modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
-@modal.web_server(PORT, startup_timeout=300)
-
-def run_kohya_gui():
-    import torch
-    import os
-    
-    print(f"pytorch version: {torch.__version__}")
-    print(f"cuda available: {torch.cuda.is_available()}")
-    
-    if torch.cuda.is_available():
-        print(f"gpu name: {torch.cuda.get_device_name(0)}")
-    os.environ["HF_HOME"] = CACHE_PATH
-    os.environ["TRANSFORMERS_CACHE"] = CACHE_PATH
-
-
-
-    for path in [MODELS_PATH, DATASET_PATH, OUTPUTS_PATH, CONFIGS_PATH]:
-        os.makedirs(path, exist_ok=True)
-
   ########## START KOHYA ###########
-
-  
-    cmd = (
-        f"cd {KOHYA_BASE} && "
-        f"accelerate launch --num_cpu_threads_per_process=4 kohya_gui.py "
-        f"--listen 0.0.0.0 --server_port {PORT} --share --headless --noverify"
-    )
-    
-    print(f"starting kohya with: {cmd}")
-    
-    try:
-        process = subprocess.Popen(cmd, shell=True)
-        process.wait()
-    except Exception as e:
-        print(f"error starting kohya: {e}")
-        raise
-
-
 @app.function(
     gpu=GPU_CONFIG,
     timeout=600,
