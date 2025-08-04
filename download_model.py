@@ -10,7 +10,7 @@ app = modal.App(name="download-hf-model")
 
 @app.function(
     timeout=3600,
-    secrets=[modal.Secret.from_name("huggingface-token")],
+    secrets=[modal.Secret.from_name("huggingface-secret")],
     volumes={MODELS_PATH: models_vol},
     memory=4096,
     cpu=2,
