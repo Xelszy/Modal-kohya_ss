@@ -194,18 +194,28 @@ def run_kohya_gui():
 
 #dataset downlaod
 
-@app.function(volumes={DATASET_PATH: dataset_vol})
+@app.function(
+    secrets=[modal.Secret.from_name("huggingface-secret")],
+    volumes={DATASET_PATH: dataset_vol},
+)
 def download_hf_dataset(repo_id: str, allow_patterns: str = "*", repo_type: str = "dataset"):
-    from huggingface_hub import snapshot_download
+    from huggingface_hub import snapshot_download, login
+    import os
+
+    # login otomatis pake token dari secret
+    hf_token = os.environ["HF_TOKEN"]
+    login(token=hf_token)
 
     local_dir = snapshot_download(
         repo_id=repo_id,
         repo_type=repo_type,
         local_dir=DATASET_PATH,
-        local_dir_use_symlinks=False,
-        allow_patterns=allow_patterns
+        allow_patterns=allow_patterns,
+        resume_download=True,   # lanjutin download kalau putus
+        max_workers=2           # batasi worker biar ga 429
     )
     return {"status": "ok", "path": local_dir}
+
 
 
 #FLux download
