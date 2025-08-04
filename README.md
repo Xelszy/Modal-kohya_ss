@@ -44,6 +44,29 @@ python deploy.py volumes
 python deploy.py check
 ```
 
+## downloader example
+
+1. download all from HF repo
+   `modal run app.py::download_model --repo-id stabilityai/stable-diffusion-xl-base-1.0
+`
+2. download one file
+   `modal run app.py::download_model --repo-id stabilityai/stable-diffusion-xl-base-1.0 --files model.safetensors
+`
+3. donwload many files
+   `modal run app.py::download_model --repo-id stabilityai/stable-diffusion-xl-base-1.0 --files '["model.safetensors","vae.safetensors"]'
+`
+4. download with cstm extnsion
+   `modal run app.py::download_model --repo-id stabilityai/stable-diffusion-xl-base-1.0 --auto-ext '["json","txt"]'
+`
+
+download loc:
+/kohya_ss/models/<repo_id>/
+
+example:
+/kohya_ss/models/stabilityai/stable-diffusion-xl-base-1.0/model.safetensors
+
+(this for modal)
+
 ## optimizations applied
 
 - shallow git clone (faster repo download)
