@@ -71,8 +71,12 @@ kohya_image = (
     .run_commands([
 
       #conflict solution
-      
-        "[ -f requirements.txt ] && sed -i -e '/torch/d' -e '/torchvision/d' -e '/torchaudio/d' -e '/xformers/d' -e '/bitsandbytes/d' requirements.txt",
+        
+        # clone sd-scripts
+        
+        "if [ ! -d /kohya_ss/sd-scripts ]; then git clone https://github.com/kohya-ss/sd-scripts.git /kohya_ss/sd-scripts; fi",
+
+        "[ -f requirements.txt ] && sed -i -e '/torch/d' -e '/torchvision/d' -e '/torchaudio/d' -e '/xformers/d' -e '/bitsandbytes/d' -e '/sd-scripts/d' requirements.txt",
         "pip install --use-pep517 --timeout 600 --find-links /tmp/pip-cache -r requirements.txt",
         "pip uninstall -y torch torchvision torchaudio triton xformers bitsandbytes || true",
 
