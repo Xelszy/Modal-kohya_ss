@@ -147,6 +147,8 @@ dataset_vol = modal.Volume.from_name("kohya-dataset", create_if_missing=True)
 outputs_vol = modal.Volume.from_name("kohya-outputs", create_if_missing=True)
 configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
 
+@modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
+@modal.web_server(PORT, startup_timeout=300)
 @app.function(
     gpu=GPU_CONFIG,
     timeout=TIMEOUT,
@@ -162,8 +164,7 @@ configs_vol = modal.Volume.from_name("kohya-configs", create_if_missing=True)
     cpu=4,
     max_containers=1
 )
-@modal.concurrent(max_inputs=ALLOW_CONCURRENT_INPUTS)
-@modal.web_server(PORT, startup_timeout=300)
+
 
 #dataset downlaod
 
